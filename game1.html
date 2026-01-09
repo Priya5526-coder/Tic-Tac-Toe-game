@@ -1,33 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tic-Tac-Toe Game</title>
-    <link rel="stylesheet" href="game1.css" />
-  </head>
-  <body>
-    <div class="msg-container hide">
-      <p id="msg">Winner</p>
-      <button id="new-btn">New Game</button>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classic Tic Tac Toe</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="game1.css">
+</head>
+<body>
+
+  <h1>CLASSIC TIC TAC TOE</h1>
+
+  <div class="container">
+
+    <!-- LEFT PANEL -->
+    <div class="panel">
+      <h3>Game Mode</h3>
+      <button id="sameDevice" class="btn active">Same Device</button>
+      <button id="botMode" class="btn">Bot</button>
+
+      <h3>Score</h3>
+      <p>X : <span id="xScore">0</span></p>
+      <p>O : <span id="oScore">0</span></p>
     </div>
-    <main>
-      <h1>Tic Tac Toe</h1>
-      <div class="container">
-        <div class="game">
-          <button class="box"></button>
-          <button class="box"></button>
-          <button class="box"></button>
-          <button class="box"></button>
-          <button class="box"></button>
-          <button class="box"></button>
-          <button class="box"></button>
-          <button class="box"></button>
-          <button class="box"></button>
-        </div>
-      </div>
-      <button id="reset-btn">Reset Game</button>
-    </main>
-    <script src="game1.js"></script>
-  </body>
+
+    <!-- CENTER GAME -->
+    <div class="game">
+      <div id="turnText">Player X Turn</div>
+      <div id="board" class="board"></div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="panel">
+      <h3>Board Size</h3>
+      <button id="size3" class="btn active">3 × 3</button>
+      <button id="size5" class="btn">5 × 5</button>
+      <button id="resetGame" class="btn reset">Reset</button>
+    </div>
+
+  </div>
+
+  <!-- RESULT POPUP -->
+  <div id="popup" class="popup hidden">
+    <div class="popup-box">
+      <h2 id="popupText">Winner</h2>
+      <button id="playAgain">Play Again</button>
+    </div>
+  </div>
+
+  <!-- SOUNDS -->
+  <audio id="winSound" src="sounds/win.mp3" preload="auto"></audio>
+  <audio id="loseSound" src="sounds/lose.mp3" preload="auto"></audio>
+  <audio id="drawSound" src="sounds/draw.mp3" preload="auto"></audio>
+  <audio id="clickSound" src="sounds/click.mp3" preload="auto"></audio>
+
+  <!-- JS -->
+  <script src="game1.js" defer></script>
+
+</body>
 </html>

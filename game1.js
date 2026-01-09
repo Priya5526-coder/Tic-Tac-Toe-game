@@ -1,92 +1,168 @@
+let boardSize = 3;
+let board = [];
+let currentPlayer = "X";
+let gameActive = true;
+let botEnabled = false;
+let xScore = 0;
+let oScore = 0;
 
-let boxes = document.querySelectorAll(".box");
-let resetBtn = document.querySelector("#reset-btn");
-let newGameBtn = document.querySelector("#new-btn");
-let msgContainer = document.querySelector(".msg-container");
-let msg = document.querySelector("#msg");
+const boardEl = document.getElementById("board");
+const turnText = document.getElementById("turnText");
 
-let turnO = true; //playerX, playerO
-let count = 0; //To Track Draw
+/* POPUP ELEMENTS */
+const popup = document.getElementById("popup");
+const popupText = document.getElementById("popupText");
+const playAgainBtn = document.getElementById("playAgain");
 
-const winPatterns = [
-  [0, 1, 2],
-  [0, 3, 6],
-  [0, 4, 8],
-  [1, 4, 7],
-  [2, 5, 8],
-  [2, 4, 6],
-  [3, 4, 5],
-  [6, 7, 8],
-];
+/* SOUNDS */
+const winSound = document.getElementById("winSound");
+const loseSound = document.getElementById("loseSound");
+const drawSound = document.getElementById("drawSound");
+const clickSound = document.getElementById("clickSound");
 
-const resetGame = () => {
-  turnO = true;
-  count = 0;
-  enableBoxes();
-  msgContainer.classList.add("hide");
-};
+function stopAllSounds() {
+  winSound.pause(); winSound.currentTime = 0;
+  loseSound.pause(); loseSound.currentTime = 0;
+  drawSound.pause(); drawSound.currentTime = 0;
+}
 
-boxes.forEach((box) => {
-  box.addEventListener("click", () => {
-    if (turnO) {
-      //playerO
-      box.innerText = "O";
-      turnO = false;
-    } else {
-      //playerX
-      box.innerText = "X";
-      turnO = true;
-    }
-    box.disabled = true;
-    count++;
+function initBoard() {
+  board = Array(boardSize * boardSize).fill("");
+  boardEl.innerHTML = "";
+  boardEl.style.gridTemplateColumns = `repeat(${boardSize}, 80px)`;
+  currentPlayer = "X";
+  gameActive = true;
+  turnText.innerText = "Player X Turn";
+  popup.classList.add("hidden");
 
-    let isWinner = checkWinner();
-
-    if (count === 9 && !isWinner) {
-      gameDraw();
-    }
+  board.forEach((_, index) => {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.onclick = () => makeMove(index);
+    boardEl.appendChild(cell);
   });
-});
+}
 
-const gameDraw = () => {
-  msg.innerText = `Game was a Draw.`;
-  msgContainer.classList.remove("hide");
-  disableBoxes();
-};
+function makeMove(index) {
+  if (!gameActive || board[index]) return;
 
-const disableBoxes = () => {
-  for (let box of boxes) {
-    box.disabled = true;
+  clickSound.currentTime = 0;
+  clickSound.play();
+
+  board[index] = currentPlayer;
+  boardEl.children[index].innerText = currentPlayer;
+
+  if (checkWin()) {
+    gameActive = false;
+    currentPlayer === "X" ? xScore++ : oScore++;
+    updateScore();
+
+    stopAllSounds();
+
+    if (botEnabled && currentPlayer === "O") {
+      loseSound.play();
+      showPopup("😢 You Lost!");
+    } else {
+      winSound.play();
+      showPopup(`🎉 Player ${currentPlayer} Wins!`);
+    }
+    return;
   }
-};
 
-const enableBoxes = () => {
-  for (let box of boxes) {
-    box.disabled = false;
-    box.innerText = "";
+  if (!board.includes("")) {
+    gameActive = false;
+    stopAllSounds();
+    drawSound.play();
+    showPopup("🤝 It's a Draw!");
+    return;
   }
-};
 
-const showWinner = (winner) => {
-  msg.innerText = `Congratulations, Winner is ${winner}`;
-  msgContainer.classList.remove("hide");
-  disableBoxes();
-};
+  currentPlayer = currentPlayer === "X" ? "O" : "X";
+  turnText.innerText = `Player ${currentPlayer} Turn`;
 
-const checkWinner = () => {
-  for (let pattern of winPatterns) {
-    let pos1Val = boxes[pattern[0]].innerText;
-    let pos2Val = boxes[pattern[1]].innerText;
-    let pos3Val = boxes[pattern[2]].innerText;
+  if (botEnabled && currentPlayer === "O") {
+    setTimeout(botMove, 400);
+  }
+}
 
-    if (pos1Val != "" && pos2Val != "" && pos3Val != "") {
-      if (pos1Val === pos2Val && pos2Val === pos3Val) {
-        showWinner(pos1Val);
-        return true;
-      }
+function botMove() {
+  const empty = board
+    .map((v, i) => v === "" ? i : null)
+    .filter(v => v !== null);
+
+  const randomIndex = empty[Math.floor(Math.random() * empty.length)];
+  makeMove(randomIndex);
+}
+
+function checkWin() {
+  const win = 3;
+  const lines = [];
+
+  for (let r = 0; r < boardSize; r++) {
+    for (let c = 0; c <= boardSize - win; c++) {
+      lines.push([...Array(win)].map((_, i) => board[r * boardSize + c + i]));
     }
   }
+
+  for (let c = 0; c < boardSize; c++) {
+    for (let r = 0; r <= boardSize - win; r++) {
+      lines.push([...Array(win)].map((_, i) => board[(r + i) * boardSize + c]));
+    }
+  }
+
+  for (let r = 0; r <= boardSize - win; r++) {
+    for (let c = 0; c <= boardSize - win; c++) {
+      lines.push([...Array(win)].map((_, i) => board[(r + i) * boardSize + c + i]));
+      lines.push([...Array(win)].map((_, i) => board[(r + win - 1 - i) * boardSize + c + i]));
+    }
+  }
+
+  return lines.some(line => line.every(v => v === currentPlayer));
+}
+
+function updateScore() {
+  document.getElementById("xScore").innerText = xScore;
+  document.getElementById("oScore").innerText = oScore;
+}
+
+function showPopup(message) {
+  popupText.innerText = message;
+  popup.classList.remove("hidden");
+}
+
+/* BUTTON EVENTS */
+playAgainBtn.onclick = initBoard;
+
+document.getElementById("resetGame").onclick = initBoard;
+
+document.getElementById("botMode").onclick = () => {
+  botEnabled = true;
+  setActive("botMode", "sameDevice");
+  initBoard();
 };
 
-newGameBtn.addEventListener("click", resetGame);
-resetBtn.addEventListener("click", resetGame);
+document.getElementById("sameDevice").onclick = () => {
+  botEnabled = false;
+  setActive("sameDevice", "botMode");
+  initBoard();
+};
+
+document.getElementById("size3").onclick = () => {
+  boardSize = 3;
+  setActive("size3", "size5");
+  initBoard();
+};
+
+document.getElementById("size5").onclick = () => {
+  boardSize = 5;
+  setActive("size5", "size3");
+  initBoard();
+};
+
+function setActive(a, b) {
+  document.getElementById(a).classList.add("active");
+  document.getElementById(b).classList.remove("active");
+}
+
+/* START GAME */
+initBoard();
